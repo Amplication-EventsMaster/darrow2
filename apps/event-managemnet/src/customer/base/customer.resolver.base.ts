@@ -26,8 +26,6 @@ import { CustomerFindUniqueArgs } from "./CustomerFindUniqueArgs";
 import { CreateCustomerArgs } from "./CreateCustomerArgs";
 import { UpdateCustomerArgs } from "./UpdateCustomerArgs";
 import { DeleteCustomerArgs } from "./DeleteCustomerArgs";
-import { EventFindManyArgs } from "../../event/base/EventFindManyArgs";
-import { Event } from "../../event/base/Event";
 import { CustomerService } from "../customer.service";
 @common.UseGuards(GqlDefaultAuthGuard, gqlACGuard.GqlACGuard)
 @graphql.Resolver(() => Customer)
@@ -142,25 +140,5 @@ export class CustomerResolverBase {
       }
       throw error;
     }
-  }
-
-  @common.UseInterceptors(AclFilterResponseInterceptor)
-  @graphql.ResolveField(() => [Event], { name: "events" })
-  @nestAccessControl.UseRoles({
-    resource: "Event",
-    action: "read",
-    possession: "any",
-  })
-  async findEvents(
-    @graphql.Parent() parent: Customer,
-    @graphql.Args() args: EventFindManyArgs
-  ): Promise<Event[]> {
-    const results = await this.service.findEvents(parent.id, args);
-
-    if (!results) {
-      return [];
-    }
-
-    return results;
   }
 }

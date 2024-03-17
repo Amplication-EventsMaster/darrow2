@@ -26,8 +26,6 @@ import { Customer } from "./Customer";
 import { CustomerFindManyArgs } from "./CustomerFindManyArgs";
 import { CustomerWhereUniqueInput } from "./CustomerWhereUniqueInput";
 import { CustomerUpdateInput } from "./CustomerUpdateInput";
-import { EventFindManyArgs } from "../../event/base/EventFindManyArgs";
-import { Event } from "../../event/base/Event";
 import { EventWhereUniqueInput } from "../../event/base/EventWhereUniqueInput";
 
 @swagger.ApiBearerAuth()
@@ -195,65 +193,6 @@ export class CustomerControllerBase {
     }
   }
 
-  @common.UseInterceptors(AclFilterResponseInterceptor)
-  @common.Get("/:id/events")
-  @ApiNestedQuery(EventFindManyArgs)
-  @nestAccessControl.UseRoles({
-    resource: "Event",
-    action: "read",
-    possession: "any",
-  })
-  async findEvents(
-    @common.Req() request: Request,
-    @common.Param() params: CustomerWhereUniqueInput
-  ): Promise<Event[]> {
-    const query = plainToClass(EventFindManyArgs, request.query);
-    const results = await this.service.findEvents(params.id, {
-      ...query,
-      select: {
-        createdAt: true,
-
-        customer: {
-          select: {
-            id: true,
-          },
-        },
-
-        date: true,
-        id: true,
-        updatedAt: true,
-      },
-    });
-    if (results === null) {
-      throw new errors.NotFoundException(
-        `No resource was found for ${JSON.stringify(params)}`
-      );
-    }
-    return results;
-  }
-
-  @common.Post("/:id/events")
-  @nestAccessControl.UseRoles({
-    resource: "Customer",
-    action: "update",
-    possession: "any",
-  })
-  async connectEvents(
-    @common.Param() params: CustomerWhereUniqueInput,
-    @common.Body() body: EventWhereUniqueInput[]
-  ): Promise<void> {
-    const data = {
-      events: {
-        connect: body,
-      },
-    };
-    await this.service.updateCustomer({
-      where: params,
-      data,
-      select: { id: true },
-    });
-  }
-
   @common.Patch("/:id/events")
   @nestAccessControl.UseRoles({
     resource: "Customer",
@@ -267,28 +206,6 @@ export class CustomerControllerBase {
     const data = {
       events: {
         set: body,
-      },
-    };
-    await this.service.updateCustomer({
-      where: params,
-      data,
-      select: { id: true },
-    });
-  }
-
-  @common.Delete("/:id/events")
-  @nestAccessControl.UseRoles({
-    resource: "Customer",
-    action: "update",
-    possession: "any",
-  })
-  async disconnectEvents(
-    @common.Param() params: CustomerWhereUniqueInput,
-    @common.Body() body: EventWhereUniqueInput[]
-  ): Promise<void> {
-    const data = {
-      events: {
-        disconnect: body,
       },
     };
     await this.service.updateCustomer({
